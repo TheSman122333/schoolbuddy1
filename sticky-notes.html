@@ -21,12 +21,27 @@
         /* Glare effect */
         .navbar {
             width: 100%;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 80%);
-            background-size: 200% 200%;
-            animation: glareAnimation 3s ease-in-out infinite, background-color 3s linear infinite;
+            background: linear-gradient(90deg, #004c5e, #005f73); /* Deep sea blue gradient */
             color: white;
-            padding: 12px;
+            padding: 10px;
             text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .navbar a:hover {
+            background-color: white; /* Glare effect */
+            color: #005f73; /* Deep sea blue text on hover */
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8); /* Glowing glare */
+            text-decoration: none;
         }
 
         @keyframes glareAnimation {
@@ -36,16 +51,6 @@
             100% {
                 background-position: 200% 200%;
             }
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 1.2rem;
-        }
-        .navbar a:hover {
-            text-decoration: underline;
         }
 
         .sticky-note-container {
@@ -163,13 +168,14 @@
             border-radius: 50%;
         }
         .calendar .note-input {
-            width: 100%;
+            width: 95%;
             padding: 10px;
             font-size: 1rem;
             border-radius: 5px;
             border: 1px solid #ccc;
             margin-top: 10px;
             display: none;
+            resize: none;
         }
 
         .add-note-btn {
@@ -276,8 +282,21 @@
                 let isDragging = false;
 
                 noteDiv.addEventListener('input', () => {
-                    stickyNotes[index].content = noteDiv.textContent;
-                    saveNotes();
+                    const trimmedContent = noteDiv.textContent.trim();
+                    if (trimmedContent === '') {
+                        // Remove the note if empty
+                        stickyNotes.splice(index, 1);
+                        saveNotes();
+                        renderNotes();
+
+                        // If the note was zoomed, hide the overlay
+                        if (noteDiv.classList.contains('zoomed')) {
+                            overlay.classList.remove('visible');
+                        }
+                    } else {
+                        stickyNotes[index].content = trimmedContent;
+                        saveNotes();
+                    }
                 });
 
                 noteDiv.onmousedown = (e) => {
@@ -364,12 +383,22 @@
             noteInputElement.focus();
 
             noteInputElement.onblur = () => {
-                notesForDates[dateString] = noteInputElement.value;
+                const inputValue = noteInputElement.value.trim(); // Trim to avoid spaces-only inputs
+
+                if (inputValue) {
+                    // Save the note if it's not null or empty
+                    notesForDates[dateString] = inputValue;
+                } else {
+                    // Remove the note for the date if input is null or empty
+                    delete notesForDates[dateString];
+                }
+
                 saveNotesForDates();
                 renderCalendar(month, year);
                 noteInputElement.style.display = 'none';
             };
         }
+
 
         // Initialize
         renderNotes();
